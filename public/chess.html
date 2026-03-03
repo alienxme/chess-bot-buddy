@@ -470,6 +470,33 @@ class Chess {
 // ═══════════════════════════════════════════════════════════
 let sf=null, sfReady=false, sfBuiltin=false;
 
+function builtinMode() {
+  sfBuiltin = true; sfReady = false; sf = null;
+  setEng('warn', 'Built-in engine (JS)');
+  console.warn('Stockfish failed to load, using built-in JS engine');
+}
+
+function sfMsg(msg, w) {
+  if (!msg) return;
+  if (msg.startsWith('uciok')) {
+    sfReady = true;
+    setEng('ok', 'Stockfish 18 ready');
+    const sk = parseInt(document.getElementById('skill').value);
+    setSkill(sk);
+  } else if (msg.startsWith('bestmove')) {
+    const parts = msg.split(/\s+/);
+    const bm = parts[1];
+    if (bm && bm !== '(none)') {
+      engMove(bm);
+    } else { doBuiltin(); }
+  } else if (msg.startsWith('info') && msg.includes('score')) {
+    const cp = msg.match(/score cp (-?\d+)/);
+    const mt = msg.match(/score mate (-?\d+)/);
+    if (mt) setEval(parseInt(mt[1]), true);
+    else if (cp) setEval(parseInt(cp[1]) / 100, false);
+  }
+}
+
 function initSF() {
   setEng('','Loading Stockfish 18…');
   try {
